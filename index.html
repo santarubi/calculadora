@@ -40,6 +40,11 @@
       padding: 15px;
       box-shadow: 0 0 8px rgba(255,215,0,0.4);
     }
+    .card h2 {
+      margin-top: 0;
+      font-size: 1.2rem;
+      color: #FFD700;
+    }
     label {
       display: block;
       margin: 6px 0 3px;
@@ -55,7 +60,6 @@
       margin-bottom: 10px;
     }
     button {
-      grid-column: span 2;
       background: #FFD700;
       color: #000;
       padding: 12px;
@@ -63,6 +67,7 @@
       border: none;
       border-radius: 6px;
       cursor: pointer;
+      width: 100%;
     }
     button:hover {
       background: #e6c200;
@@ -74,6 +79,9 @@
       border-radius: 12px;
       border: 2px solid #FFD700;
       margin-top: 10px;
+    }
+    .resumo h2 {
+      margin-top: 0;
     }
     .bom { color: #00e676; font-weight: bold; }
     .ok { color: #ffeb3b; font-weight: bold; }
@@ -87,7 +95,6 @@
 </head>
 <body>
   <header>
-    <!-- Atenção: renomeie seu arquivo para "logo.png" -->
     <img src="./logo.png" alt="Santa Rubi" class="logo">
   </header>
 
@@ -116,12 +123,18 @@
 
       <label for="precoBruto">Preço Bruto (R$)</label>
       <input type="number" id="precoBruto" value="" step="0.01">
+
+      <label for="descontoBruto">Desconto Bruto (%)</label>
+      <input type="number" id="descontoBruto" value="0" step="0.01">
+
+      <label for="descontoBanho">Desconto Banho (%)</label>
+      <input type="number" id="descontoBanho" value="0" step="0.01">
     </div>
 
     <!-- Coluna 2 -->
     <div class="card">
-      <h2>Configurações</h2>
-      <label for="markup">Markup</label>
+      <h2>Custos & Configurações</h2>
+      <label for="markup">Markup (fator)</label>
       <input type="number" id="markup" value="5" step="0.1">
 
       <label for="frete">Frete (R$)</label>
@@ -130,6 +143,18 @@
       <label for="sacolinha">Sacolinha (R$)</label>
       <input type="number" id="sacolinha" value="3" step="0.01">
 
+      <label for="ouro">Cotação Ouro (R$/g)</label>
+      <input type="number" id="ouro" value="640" step="0.01">
+
+      <label for="maoObra">Mão de Obra (fator)</label>
+      <input type="number" id="maoObra" value="3" step="0.1">
+
+      <label for="verniz">Verniz (R$/kg)</label>
+      <input type="number" id="verniz" value="330" step="0.01">
+
+      <label for="base">Base (R$/kg)</label>
+      <input type="number" id="base" value="180" step="0.01">
+
       <button onclick="calcular()">Calcular</button>
     </div>
 
@@ -137,7 +162,9 @@
     <div class="resumo" id="resumo">
       <h2>Resumo</h2>
       <p id="custoBruto">Custo Bruto: -</p>
+      <p id="custoBrutoDesc">Custo Bruto c/ desconto: -</p>
       <p id="custoBanho">Custo Banho: -</p>
+      <p id="custoBanhoDesc">Custo Banho c/ desconto: -</p>
       <p id="custoTotal">Custo Total: -</p>
       <p id="precoVenda">Preço Venda: -</p>
       <p id="comissao">Comissão: -</p>

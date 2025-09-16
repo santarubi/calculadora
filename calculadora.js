@@ -1,97 +1,89 @@
-// Mapeamento padrão de milésimos por tipo de peça
+// === Tabela padrão de milésimos ===
 const milesimosPadrao = {
-  "ANEL": 3,
-  "BRACELETE": 3,
-  "BRINCO": 2,
-  "COLAR": 3,
-  "MASCULINO": 3,
-  "PIERCING": 2,
-  "PINGENTE": 2,
-  "PULSEIRA": 3,
-  "TORNOZELEIRA": 3
+  ANEL: 3, BRACELETE: 3, BRINCO: 2, COLAR: 3, MASCULINO: 3,
+  PIERCING: 2, PINGENTE: 2, PULSEIRA: 3, TORNOZELEIRA: 3
 };
 
-// Atualiza automaticamente os milésimos ao mudar tipo
-function atualizarMilesimos() {
+function atualizarMilesimos(){
   const tipo = document.getElementById("tipoPeca").value;
-  document.getElementById("milesimos").value = milesimosPadrao[tipo] || 3;
+  document.getElementById("milesimos").value = milesimosPadrao[tipo] ?? 3;
 }
 
-// Função principal de cálculo
-function calcular() {
-  // === Entradas principais ===
-  const precoBruto = parseFloat(document.getElementById("precoBruto").value) || 0;
-  const descontoBruto = parseFloat(document.getElementById("descontoBruto").value) || 0;
-  const peso = parseFloat(document.getElementById("peso").value) || 0;
-  const milesimos = parseFloat(document.getElementById("milesimos").value) || 0;
-  const descontoBanho = parseFloat(document.getElementById("descontoBanho").value) || 0;
+// arredonda sempre para X,90
+function arredondarX90(valor){
+  const inteiro = Math.floor(valor);
+  const candidato = inteiro + 0.90;
+  return Number((valor <= candidato ? candidato : inteiro + 1 + 0.90).toFixed(2));
+}
 
-  // === Configurações ===
-  const markup = parseFloat(document.getElementById("markup").value) || 1;
-  const frete = parseFloat(document.getElementById("frete").value) || 0;
-  const sacolinha = parseFloat(document.getElementById("sacolinha").value) || 0;
+const n  = v => (isNaN(v) ? 0 : v);
+const br = v => Number(v).toLocaleString("pt-BR",{minimumFractionDigits:2, maximumFractionDigits:2});
 
-  // === Insumos editáveis ===
-  const ouro = parseFloat(document.getElementById("ouro").value) || 640;     // R$/g
-  const maoObra = parseFloat(document.getElementById("maoObra").value) || 3; // fator
-  const vernizKg = parseFloat(document.getElementById("verniz").value) || 330; // R$/kg
-  const baseKg = parseFloat(document.getElementById("base").value) || 180;   // R$/kg
+function calcular(){
+  // Entradas
+  const precoBruto    = n(parseFloat(document.getElementById("precoBruto").value));
+  const descontoBruto = n(parseFloat(document.getElementById("descontoBruto").value)); // %
+  const peso          = n(parseFloat(document.getElementById("peso").value));          // g
+  const milesimos     = n(parseFloat(document.getElementById("milesimos").value));     // ex: 3
+  const descontoBanho = n(parseFloat(document.getElementById("descontoBanho").value)); // %
 
-  // Converter insumos por grama
-  const verniz = vernizKg / 1000;
-  const base = baseKg / 1000;
+  const markup    = n(parseFloat(document.getElementById("markup").value));
+  const frete     = n(parseFloat(document.getElementById("frete").value));
+  const sacolinha = n(parseFloat(document.getElementById("sacolinha").value));
 
-  // === Cálculos ===
+  // Insumos (IMPORTANTE: OURO em R$/KG; Verniz/Base em R$/KG)
+  const ouroKg   = n(parseFloat(document.getElementById("ouro").value));   // ex: 640
+  const maoObra  = n(parseFloat(document.getElementById("maoObra").value)); // ex: 3
+  const vernizKg = n(parseFloat(document.getElementById("verniz").value)); // ex: 330
+  const baseKg   = n(parseFloat(document.getElementById("base").value));   // ex: 180
+
+  // Converte para R$/g onde necessário
+  const ouroTermMO   = (ouroKg * maoObra) / 1000;                  // R$/g
+  const ouroTermMil  = (ouroKg * milesimos) / 1000;                // R$/g
+  const vernizPorG   =  vernizKg / 1000;                           // R$/g
+  const basePorG     =  baseKg   / 1000;                           // R$/g
+
+  // Banho (SEM desconto)
+  const custoBanhoPorG = ouroTermMO + ouroTermMil + vernizPorG + basePorG;
+  const banhoSemDesc   = custoBanhoPorG * peso;                    // R$/peça
+  const banhoComDesc   = banhoSemDesc * (1 - descontoBanho/100);   // COM desconto
+
   // Bruto
-  const custoBruto = precoBruto;
-  const custoBrutoDesc = custoBruto * (1 - descontoBruto / 100);
+  const brutoSemDesc = precoBruto;
+  const brutoComDesc = precoBruto * (1 - descontoBruto/100);
 
-  // Banho (fórmula Excel adaptada)
-  const custoBanhoUnit = ((ouro * maoObra) + (ouro * milesimos / 1000) + verniz + base) * peso;
-  const custoBanhoDesc = custoBanhoUnit * (1 - descontoBanho / 100);
+  // Markup SEM desconto (regra sua)
+  const custoPecaMarkup = (brutoSemDesc + banhoSemDesc) * markup;
 
-  // Peça com markup (usando SEM descontos)
-  const custoPecaMarkup = (custoBruto + custoBanhoUnit) * markup;
+  // Custo fixo = 11% sobre (peça com markup + frete + sacolinha)
+  const custoFixo = (custoPecaMarkup + frete + sacolinha) * 0.11;
 
-  // Custos fixos (11% sobre peça com markup + frete + sacolinha)
-  const custoFixos = (custoPecaMarkup + sacolinha + frete) * 0.11;
-
-  // Preço de venda antes arredondamento
-  let precoVenda = custoPecaMarkup + sacolinha + frete + custoFixos;
-
-  // Arredondamento X,90
-  precoVenda = Math.ceil(precoVenda) - 0.10;
-  if (precoVenda < custoPecaMarkup) {
-    precoVenda = custoPecaMarkup; // segurança
-  }
+  // PV (X,90)
+  const pvAntes = custoPecaMarkup + frete + sacolinha + custoFixo;
+  const pvFinal = arredondarX90(pvAntes);
 
   // Comissão
-  const comissao = precoVenda * 0.40;
+  const comissao = pvFinal * 0.40;
 
-  // Custo total (para margem/lucro, considerar COM desconto)
-  const custoTotal = custoBrutoDesc + custoBanhoDesc + sacolinha + frete + custoFixos + comissao;
+  // Custo total para margem/lucro (usa COM desconto)
+  const custoTotal = brutoComDesc + banhoComDesc + frete + sacolinha + custoFixo + comissao;
 
-  // Lucro
-  const lucro = precoVenda - custoTotal;
-  const margem = (lucro / precoVenda) * 100;
+  // Lucro/Margem
+  const lucro     = pvFinal - custoTotal;
+  const margemPct = pvFinal > 0 ? (lucro / pvFinal) * 100 : 0;
 
-  // Classificação visual
-  let classLucro = "bom", textoLucro = "Lucro bom";
-  if (lucro < 50) { classLucro = "baixo"; textoLucro = "Lucro baixo"; }
-  else if (lucro < 100) { classLucro = "ok"; textoLucro = "Lucro ok"; }
+  // Semáforos
+  const classeLucro  = (lucro >= 100) ? "bom" : (lucro >= 50 ? "ok" : "baixo");
+  const classeMargem = (margemPct >= 50) ? "bom" : (margemPct >= 40 ? "ok" : "baixo");
 
-  let classMargem = "bom", textoMargem = "Margem boa";
-  if (margem < 40) { classMargem = "baixo"; textoMargem = "Margem baixa"; }
-  else if (margem < 50) { classMargem = "ok"; textoMargem = "Margem ok"; }
-
-  // === Saída no resumo ===
-  document.getElementById("custoBruto").innerText = `Custo Bruto: R$ ${custoBruto.toFixed(2)}`;
-  document.getElementById("custoBrutoDesc").innerText = `Custo Bruto c/ desconto: R$ ${custoBrutoDesc.toFixed(2)}`;
-  document.getElementById("custoBanho").innerText = `Custo Banho: R$ ${custoBanhoUnit.toFixed(2)}`;
-  document.getElementById("custoBanhoDesc").innerText = `Custo Banho c/ desconto: R$ ${custoBanhoDesc.toFixed(2)}`;
-  document.getElementById("custoTotal").innerText = `Custo Total: R$ ${custoTotal.toFixed(2)}`;
-  document.getElementById("precoVenda").innerText = `Preço Venda Final: R$ ${precoVenda.toFixed(2)}`;
-  document.getElementById("comissao").innerText = `Comissão (40%): R$ ${comissao.toFixed(2)}`;
-  document.getElementById("lucro").innerHTML = `Lucro: <span class="${classLucro}">R$ ${lucro.toFixed(2)} (${textoLucro})</span>`;
-  document.getElementById("margem").innerHTML = `Margem: <span class="${classMargem}">${margem.toFixed(2)}% (${textoMargem})</span>`;
+  // Saída
+  document.getElementById("custoBruto").innerText     = `Custo Bruto: R$ ${br(brutoSemDesc)}`;
+  document.getElementById("custoBrutoDesc").innerText = `C/ desconto: R$ ${br(brutoComDesc)}`;
+  document.getElementById("custoBanho").innerText     = `Custo Banho: R$ ${br(banhoSemDesc)}`;
+  document.getElementById("custoBanhoDesc").innerText = `C/ desconto: R$ ${br(banhoComDesc)}`;
+  document.getElementById("custoTotal").innerText     = `Custo Total (desc + fixo + comissão): R$ ${br(custoTotal)}`;
+  document.getElementById("precoVenda").innerText     = `Preço Venda (X,90): R$ ${br(pvFinal)}`;
+  document.getElementById("comissao").innerText       = `Comissão (40%): R$ ${br(comissao)}`;
+  document.getElementById("lucro").innerHTML          = `Lucro: <span class="${classeLucro}">R$ ${br(lucro)}</span>`;
+  document.getElementById("margem").innerHTML         = `Margem: <span class="${classeMargem}">${margemPct.toFixed(2)}%</span>`;
 }

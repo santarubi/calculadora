@@ -1,5 +1,5 @@
 // Sempre incremente a versão ao atualizar (ex: v4, v5...)
-const CACHE_NAME = "santarubi-cache-v3";  
+const CACHE_NAME = "santarubi-cache-v4";  
 
 const FILES_TO_CACHE = [
   "/",

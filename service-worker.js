@@ -1,4 +1,6 @@
-const CACHE_NAME = "santarubi-cache-v2"; // altere a versão sempre que mudar algo
+// Sempre incremente a versão ao atualizar (ex: v4, v5...)
+const CACHE_NAME = "santarubi-cache-v3";  
+
 const FILES_TO_CACHE = [
   "/",
   "/index.html",
@@ -16,10 +18,10 @@ self.addEventListener("install", (event) => {
       return cache.addAll(FILES_TO_CACHE);
     })
   );
-  self.skipWaiting(); // força ativar nova versão
+  self.skipWaiting(); // ativa nova versão imediatamente
 });
 
-// Ativa, remove caches antigos e assume clientes imediatamente
+// Ativa e remove caches antigos
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
@@ -32,21 +34,20 @@ self.addEventListener("activate", (event) => {
       );
     })
   );
-  self.clients.claim(); // faz com que a nova versão atue sem precisar fechar o navegador
+  self.clients.claim(); // força clientes a usarem esta versão
 });
 
-// Intercepta requisições
+// Network first: sempre busca versão nova do GitHub
 self.addEventListener("fetch", (event) => {
   event.respondWith(
-    fetch(event.request) // sempre tenta pegar a versão mais nova primeiro
+    fetch(event.request)
       .then((response) => {
-        // salva no cache a nova versão
         const clone = response.clone();
         caches.open(CACHE_NAME).then((cache) => {
           cache.put(event.request, clone);
         });
         return response;
       })
-      .catch(() => caches.match(event.request)) // se offline, usa o cache
+      .catch(() => caches.match(event.request)) // offline: usa cache
   );
 });

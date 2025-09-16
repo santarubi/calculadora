@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calculadora Santa Rubi</title>
+
+  <!-- Manifest PWA -->
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" sizes="192x192" href="logo_192x192.png">
+  <link rel="icon" sizes="512x512" href="logo_512x512.png">
+  <meta name="theme-color" content="#000000">
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background: #000;
+      color: #FFD700;
+    }
+    header {
+      background: #000;
+      text-align: center;
+      padding: 15px;
+      border-bottom: 2px solid #FFD700;
+    }
+    .logo {
+      height: 70px;
+    }
+    .container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      padding: 20px;
+    }
+    .card {
+      background: #111;
+      border: 1px solid #FFD700;
+      border-radius: 12px;
+      padding: 15px;
+      box-shadow: 0 0 8px rgba(255,215,0,0.4);
+    }
+    label {
+      display: block;
+      margin: 6px 0 3px;
+      font-size: 14px;
+    }
+    input, select {
+      width: 100%;
+      padding: 8px;
+      border-radius: 6px;
+      border: 1px solid #FFD700;
+      background: #222;
+      color: #FFD700;
+      margin-bottom: 10px;
+    }
+    button {
+      grid-column: span 2;
+      background: #FFD700;
+      color: #000;
+      padding: 12px;
+      font-weight: bold;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #e6c200;
+    }
+    .resumo {
+      grid-column: span 2;
+      background: #222;
+      padding: 15px;
+      border-radius: 12px;
+      border: 2px solid #FFD700;
+      margin-top: 10px;
+    }
+    .bom { color: #00e676; font-weight: bold; }
+    .ok { color: #ffeb3b; font-weight: bold; }
+    .baixo { color: #ff5252; font-weight: bold; }
+    @media (max-width: 768px) {
+      .container {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <!-- Atenção: renomeie seu arquivo para "logo.png" -->
+    <img src="./logo.png" alt="Santa Rubi" class="logo">
+  </header>
+
+  <div class="container">
+    <!-- Coluna 1 -->
+    <div class="card">
+      <h2>Dados da Peça</h2>
+      <label for="tipoPeca">Tipo</label>
+      <select id="tipoPeca" onchange="atualizarMilesimos()">
+        <option value="ANEL">Anel</option>
+        <option value="BRACELETE">Bracelete</option>
+        <option value="BRINCO">Brinco</option>
+        <option value="COLAR">Colar</option>
+        <option value="MASCULINO">Masculino</option>
+        <option value="PIERCING">Piercing</option>
+        <option value="PINGENTE">Pingente</option>
+        <option value="PULSEIRA">Pulseira</option>
+        <option value="TORNOZELEIRA">Tornozeleira</option>
+      </select>
+
+      <label for="milesimos">Milésimos</label>
+      <input type="number" id="milesimos" value="3" step="0.01">
+
+      <label for="peso">Peso (g)</label>
+      <input type="number" id="peso" value="" step="0.01">
+
+      <label for="precoBruto">Preço Bruto (R$)</label>
+      <input type="number" id="precoBruto" value="" step="0.01">
+    </div>
+
+    <!-- Coluna 2 -->
+    <div class="card">
+      <h2>Configurações</h2>
+      <label for="markup">Markup</label>
+      <input type="number" id="markup" value="5" step="0.1">
+
+      <label for="frete">Frete (R$)</label>
+      <input type="number" id="frete" value="0" step="0.01">
+
+      <label for="sacolinha">Sacolinha (R$)</label>
+      <input type="number" id="sacolinha" value="3" step="0.01">
+
+      <button onclick="calcular()">Calcular</button>
+    </div>
+
+    <!-- Resumo -->
+    <div class="resumo" id="resumo">
+      <h2>Resumo</h2>
+      <p id="custoBruto">Custo Bruto: -</p>
+      <p id="custoBanho">Custo Banho: -</p>
+      <p id="custoTotal">Custo Total: -</p>
+      <p id="precoVenda">Preço Venda: -</p>
+      <p id="comissao">Comissão: -</p>
+      <p id="lucro">Lucro: -</p>
+      <p id="margem">Margem: -</p>
+    </div>
+  </div>
+
+  <!-- Script de cálculo -->
+  <script src="calculadora.js"></script>
+
+  <!-- Service Worker -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('service-worker.js')
+        .then(() => console.log('SW registrado com sucesso'))
+        .catch(err => console.error('Erro ao registrar SW', err));
+    }
+  </script>
+</body>
+</html>
